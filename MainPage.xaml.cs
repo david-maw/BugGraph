@@ -2,14 +2,13 @@
 using Microsoft.Identity.Client;
 using System.Diagnostics;
 
+using Azure.Identity;
+
 namespace Graph6;
 
 public partial class MainPage : ContentPage
 {
 	int count = 0;
-    private static readonly string[] _scopes = new[] { "User.Read" };
-    private const string TenantId = "5b48c79c-24fd-4e7f-96be-194d6f23b623";
-    public const string ClientId = "85e78333-f59d-4623-bf1b-a351802ca32b";
     private User user;
     public MainPage()
 	{
@@ -34,8 +33,8 @@ public partial class MainPage : ContentPage
 		// does not work on Android
 		var options = new InteractiveBrowserCredentialOptions
 		{
-			TenantId = TenantId,
-			ClientId = ClientId,
+			TenantId = AppConstants.TenantId,
+			ClientId = AppConstants.ClientId,
 			AuthorityHost = AzureAuthorityHosts.AzurePublicCloud,
 			// MUST be http://localhost or http://localhost:PORT
 			// See https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/wiki/System-Browser-on-.Net-Core
@@ -45,17 +44,16 @@ public partial class MainPage : ContentPage
 		// https://learn.microsoft.com/dotnet/api/azure.identity.interactivebrowsercredential
 		var interactiveCredential = new InteractiveBrowserCredential(options);
 
-		var graphClient = new GraphServiceClient(interactiveCredential, _scopes);
-
+		var graphClient = new GraphServiceClient(interactiveCredential, AppConstants.Scopes);
 #endif
 		// Using Microsoft.Identity.Client
-		var pc = PublicClientApplicationBuilder.Create(ClientId)
-				.WithAuthority($"https://login.microsoftonline.com/{TenantId}/")
+		var pc = PublicClientApplicationBuilder.Create(AppConstants.ClientId)
+				.WithAuthority($"https://login.microsoftonline.com/{AppConstants.TenantId}/")
 				.WithDefaultRedirectUri()
 				.Build();
 
 
-		var t = await pc.AcquireTokenInteractive(_scopes)
+		var t = await pc.AcquireTokenInteractive(AppConstants.Scopes)
 			#if ANDROID
 			.WithParentActivityOrWindow(Platform.CurrentActivity)
 			#endif

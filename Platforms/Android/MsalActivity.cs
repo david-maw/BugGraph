@@ -8,7 +8,7 @@ namespace Graph6
     [IntentFilter(new[] { Intent.ActionView },
         Categories = new[] { Intent.CategoryBrowsable, Intent.CategoryDefault },
         DataHost = "auth",
-        DataScheme = $"msal{MainPage.ClientId}")]
+        DataScheme = $"msal{AppConstants.ClientId}")]
     public class MsalActivity : BrowserTabActivity
     {
     }
