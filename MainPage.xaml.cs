@@ -1,8 +1,10 @@
-﻿using Microsoft.Graph;
+﻿using Microsoft.Graph.Models;
 using Microsoft.Identity.Client;
 using System.Diagnostics;
 
 using Azure.Identity;
+using Microsoft.Kiota.Abstractions.Authentication;
+using Microsoft.Graph;
 
 namespace Graph6;
 
@@ -46,31 +48,13 @@ public partial class MainPage : ContentPage
 
 		var graphClient = new GraphServiceClient(interactiveCredential, AppConstants.Scopes);
 #endif
-		// Using Microsoft.Identity.Client
-		var pc = PublicClientApplicationBuilder.Create(AppConstants.ClientId)
-				.WithAuthority($"https://login.microsoftonline.com/{AppConstants.TenantId}/")
-				.WithDefaultRedirectUri()
-				.Build();
 
+        var authenticationProvider = new BaseBearerTokenAuthenticationProvider(new TokenProvider());
+        var graphClient = new GraphServiceClient(authenticationProvider);
 
-		var t = await pc.AcquireTokenInteractive(AppConstants.Scopes)
-			#if ANDROID
-			.WithParentActivityOrWindow(Platform.CurrentActivity)
-			#endif
-			.ExecuteAsync();
-
-
-		var graphClient = new GraphServiceClient("https://graph.microsoft.com/beta", null);
-
-		graphClient.AuthenticationProvider = new DelegateAuthenticationProvider(async (request) =>
+        try
 		{
-			request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", t.AccessToken);
-			await Task.FromResult<object>(null);
-		});
-
-		try
-		{
-            user = await graphClient.Me.Request().GetAsync();
+            user = await graphClient.Me.GetAsync();
         }
 		catch (Exception ex)
 		{
@@ -81,6 +65,35 @@ public partial class MainPage : ContentPage
 			HelloLabel.Text = "User information could not be found";
 		else
 			HelloLabel.Text = $"Hello, {user.DisplayName}!";
+    }
+
+    public class TokenProvider : IAccessTokenProvider
+    {
+
+		// Using Microsoft.Identity.Client
+		private readonly IPublicClientApplication publicClientApplication;
+
+		public TokenProvider()
+		{
+			publicClientApplication = PublicClientApplicationBuilder.Create(AppConstants.ClientId)
+                .WithAuthority($"https://login.microsoftonline.com/{AppConstants.TenantId}/")
+                .WithDefaultRedirectUri()
+                .Build();
+        }
+
+        public async Task<string> GetAuthorizationTokenAsync(Uri uri, Dictionary<string, object> additionalAuthenticationContext = default,CancellationToken cancellationToken = default)
+        {
+            var authenticationResult = await publicClientApplication.AcquireTokenInteractive(AppConstants.Scopes)
+#if ANDROID
+							.WithParentActivityOrWindow(Platform.CurrentActivity)
+#endif
+							.ExecuteAsync();
+
+            // get the token and return it in your own way
+            return authenticationResult.AccessToken;
+        }
+
+        public AllowedHostsValidator AllowedHostsValidator { get; }
     }
 }
 
