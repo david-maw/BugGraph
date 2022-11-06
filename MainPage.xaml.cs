@@ -1,7 +1,6 @@
 ﻿using Microsoft.Graph.Models;
 using Microsoft.Identity.Client;
 using System.Diagnostics;
-using Azure.Identity;
 using Microsoft.Kiota.Abstractions.Authentication;
 using Microsoft.Graph;
 using Microsoft.Identity.Client.Extensions.Msal;
@@ -30,25 +29,6 @@ public partial class MainPage : ContentPage
     }
     private async void GetUserInfoBtn_Clicked(object sender, EventArgs e)
     {
-#if false
-        // using Azure.Identity; 
-        // does not work on Android
-        var options = new InteractiveBrowserCredentialOptions
-        {
-            TenantId = AppConstants.TenantId,
-            ClientId = AppConstants.ClientId,
-            AuthorityHost = AzureAuthorityHosts.AzurePublicCloud,
-            // MUST be http://localhost or http://localhost:PORT
-            // See https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/wiki/System-Browser-on-.Net-Core
-            RedirectUri = new Uri("http://localhost"),
-        };
-
-        // https://learn.microsoft.com/dotnet/api/azure.identity.interactivebrowsercredential
-        var interactiveCredential = new InteractiveBrowserCredential(options);
-
-        var graphClient = new GraphServiceClient(interactiveCredential, AppConstants.Scopes);
-#endif
-
         var authenticationProvider = new BaseBearerTokenAuthenticationProvider(new TokenProvider());
         var graphClient = new GraphServiceClient(authenticationProvider);
 
